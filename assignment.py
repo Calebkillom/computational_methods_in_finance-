@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from scipy.stats import norm
 
 """ Specify the correct file path """
 file_path = (
@@ -32,3 +34,28 @@ df = df.rename(columns={
 print(df)
 
 """ Computation of the Implied Volatility By Newton's Method """
+""" 
+Calculate the Vega for Current Time
+Calculate  Volatility for Next Period
+Repeat Process 1 and 2
+"""
+
+""" List to store dictionaries """
+data_list = []
+
+""" Iterate through columns and rows """
+for column in df.columns[1:]:
+    tao_value = float(column.split('=')[1])
+    for index, row in df.iterrows():
+        strike = row['Strike']
+        call_opt_price = row[column]
+        
+        """ Create dictionary and append to list """
+        data_dict = {
+            "strike": strike,
+            "tao": tao_value,
+            "call_opt_price": call_opt_price
+        }
+        data_list.append(data_dict)
+for item in data_list:
+    print(item)
