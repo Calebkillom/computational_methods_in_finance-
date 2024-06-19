@@ -3,6 +3,7 @@ import numpy as np
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.interpolate import griddata
 
 """ Specify the correct file path """
 file_path = (
@@ -154,6 +155,40 @@ ax.set_zlabel('Implied Volatility')
 
 """ Save the plot to a PDF file """
 plt.savefig('implied_volatility_surface.pdf', format='pdf')
+
+""" Show the plot """
+plt.show()
+
+""" Define grid for interpolation """
+strike_range = np.linspace(min(strikes), max(strikes), 100)
+maturity_range = np.linspace(min(maturities), max(maturities), 100)
+strike_grid, maturity_grid = np.meshgrid(strike_range, maturity_range)
+
+""" Interpolate the implied volatilities """
+implied_volatility_grid = griddata(
+    (strikes, maturities), 
+    implied_volatilities, 
+    (strike_grid, maturity_grid), 
+    method='cubic'
+)
+
+""" Create a new figure for a 3D plot """
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+""" Plot the interpolated surface """
+surf = ax.plot_surface(strike_grid, maturity_grid, implied_volatility_grid, cmap='viridis')
+
+""" Add a color bar which maps values to colors """
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
+
+""" Add labels """
+ax.set_xlabel('Strike Price')
+ax.set_ylabel('Maturity')
+ax.set_zlabel('Implied Volatility')
+
+""" Save the plot to a PDF file """
+plt.savefig('implied_volatility_surface_interpolated.pdf', format='pdf')
 
 """ Show the plot """
 plt.show()
