@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 """ Specify the correct file path """
 file_path = (
@@ -126,3 +128,32 @@ for i in range(len(data_list)):
 """ Print the new array of dictionaries with implied volatilities """
 for item in implied_volatility_data:
     print(item)
+
+""" Filter out unreasonable values """
+filtered_data = [item for item in implied_volatility_data if 0 <= item['implied_volatility'] <= 3]
+
+""" Extract the data again from filtered data """
+strikes = [item['strike'] for item in filtered_data]
+maturities = [item['maturity'] for item in filtered_data]
+implied_volatilities = [item['implied_volatility'] for item in filtered_data]
+
+""" Create a new figure for a 3D plot """
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+""" Create a triangulation and plot a trisurf """
+triang = ax.plot_trisurf(strikes, maturities, implied_volatilities, cmap='viridis', edgecolor='none')
+
+""" Add a color bar which maps values to colors """
+fig.colorbar(triang, ax=ax, shrink=0.5, aspect=5)
+
+""" Add labels """
+ax.set_xlabel('Strike Price')
+ax.set_ylabel('Maturity')
+ax.set_zlabel('Implied Volatility')
+
+""" Save the plot to a PDF file """
+plt.savefig('implied_volatility_surface.pdf', format='pdf')
+
+""" Show the plot """
+plt.show()
