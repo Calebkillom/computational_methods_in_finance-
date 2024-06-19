@@ -30,9 +30,6 @@ df = df.rename(columns={
     'Unnamed: 5': 'tao=1.5'
 })
 
-""" Print the modified DataFrame """
-print(df)
-
 """ Computation of the Implied Volatility By Newton's Method """
 """ 
 Calculate the Vega for Current Time
@@ -57,5 +54,75 @@ for column in df.columns[1:]:
             "call_opt_price": call_opt_price
         }
         data_list.append(data_dict)
-for item in data_list:
+
+""" Calculating the Black scholes price for the first period """
+""" Access the first element """
+first_element = data_list[0]
+k = first_element["strike"]
+tau = first_element["tao"]
+
+""" Given parameters """
+S = 100
+r = 0.03
+q = 0
+sigma = 0.25
+
+"""  Black-Scholes formula """
+def black_scholes_call(S, K, T, r, sigma, q):
+    d1 = (np.log(S / K) + (r - q + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    call_price = S * np.exp(-q * T) * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+    return call_price
+
+""" Calculate the call option price """
+call_option_price = black_scholes_call(S, k, tau, r, sigma, q)
+
+""" Calculating the Vega """
+def black_scholes_vega(S, K, T, r, sigma, q):
+    d1 = (np.log(S / K) + (r - q + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
+    vega = S * np.exp(-q * T) * norm.pdf(d1) * np.sqrt(T)
+    return vega
+call_option_vega = black_scholes_vega(S, k, tau, r, sigma, q)
+
+""" List to store results """
+implied_volatility_data = []
+
+""" Iterate through the entries in data_list and calculate implied volatility for each entry """
+for i in range(len(data_list)):
+    data_dict = data_list[i]
+    strike = data_dict["strike"]
+    tau = data_dict["tao"]
+    market_price = data_dict["call_opt_price"]
+    
+    """ Calculate Vega for this specific strike and tau """
+    vega = black_scholes_vega(S, strike, tau, r, sigma, q)
+    
+    """ Use initial sigma (current sigma) as 0.15 (or any initial guess you prefer) """
+    initial_sigma = 0.15
+    
+    """ Define Newton-Raphson method for implied volatility (single iteration) """
+    def newton_raphson_iv(S, K, T, r, market_price, initial_sigma, q):
+        sigma = initial_sigma
+        
+        """ Calculate theoretical price and vega for the current sigma """
+        theoretical_price = black_scholes_call(S, K, T, r, sigma, q)
+        vega = black_scholes_vega(S, K, T, r, sigma, q)
+        
+        """ Update sigma using Newton-Raphson method (single iteration) """
+        sigma_new = sigma - (theoretical_price - market_price) / vega
+        
+        return sigma_new
+    
+    """ Calculate implied volatility for this strike and tau """
+    implied_volatility = newton_raphson_iv(S, strike, tau, r, market_price, initial_sigma, q)
+    
+    """ Append dictionary with implied volatility, strike, and tao to the list """
+    implied_volatility_data.append({
+        "implied_volatility": implied_volatility,
+        "strike": strike,
+        "maturity": tau
+    })
+
+""" Print the new array of dictionaries with implied volatilities """
+for item in implied_volatility_data:
     print(item)
