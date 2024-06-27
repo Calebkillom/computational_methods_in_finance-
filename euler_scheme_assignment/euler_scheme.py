@@ -17,11 +17,17 @@ def exact_solution(X0, mu, sigma, t):
 """ Euler-Maruyama method for GBM """
 def euler_maruyama(X0, mu, sigma, T, num_steps):
     dt = T / num_steps
+    t_values = np.linspace(0.0, T, num_steps + 1)
+    dt_values = np.diff(t_values)  # Array of time increments
+    W = np.zeros(num_steps + 1)
+    for k in range(num_steps):
+        dW = np.sqrt(dt_values[k]) * np.random.normal()
+        W[k + 1] = W[k] + dW
     X = np.zeros(num_steps + 1)
     X[0] = X0
     for i in range(num_steps):
-        dW = np.sqrt(dt) * np.random.normal()
-        X[i+1] = X[i] + mu * X[i] * dt + sigma * X[i] * dW
+        dW = W[i + 1] - W[i]
+        X[i + 1] = X[i] + mu * X[i] * dt_values[i] + sigma * X[i] * dW
     return X[-1]
 
 """ Compute errors for different values of Delta t """
@@ -50,6 +56,7 @@ plt.ylabel('ln(Absolute Error)')
 plt.title('Log-log Plot of Absolute Error vs ln(Delta)')
 plt.legend()
 plt.grid(True)
+plt.savefig('log_plot.png')
 plt.show()
 
 print(f"Coefficients from linear fit: intercept = {coeffs[1]}, slope = {coeffs[0]}")
