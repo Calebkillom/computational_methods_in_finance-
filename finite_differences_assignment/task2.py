@@ -97,9 +97,10 @@ errors_explicit_200_30_vol_04 = np.zeros_like(S_steps, dtype=float)
 errors_implicit_200_30_vol_04 = np.zeros_like(S_steps, dtype=float)
 errors_crank_nicolson_200_30_vol_04 = np.zeros_like(S_steps, dtype=float)
 
-# Compute errors for volatility = 0.2
+# Compute errors for volatility = 0.2 and volatility = 0.4
 for idx, S in enumerate(S_steps):
-    BS_price = black_scholes_put(S, E, T, r, volatility_02)
+    BS_price_02 = black_scholes_put(S, E, T, r, volatility_02)
+    BS_price_04 = black_scholes_put(S, E, T, r, volatility_04)
 
     V_explicit_200_30_vol_02, grid_S_explicit_200_30_vol_02 = finite_difference_methods(S_steps, E, T, r, volatility_02, N_200, M_30, method="explicit")
     V_implicit_200_30_vol_02, grid_S_implicit_200_30_vol_02 = finite_difference_methods(S_steps, E, T, r, volatility_02, N_200, M_30, method="implicit")
@@ -116,14 +117,14 @@ for idx, S in enumerate(S_steps):
     V_explicit_200_30_vol_04_interp = interpolate_to_steps(grid_S_explicit_200_30_vol_04, V_explicit_200_30_vol_04, S_steps)
     V_implicit_200_30_vol_04_interp = interpolate_to_steps(grid_S_implicit_200_30_vol_04, V_implicit_200_30_vol_04, S_steps)
     V_crank_nicolson_200_30_vol_04_interp = interpolate_to_steps(grid_S_crank_nicolson_200_30_vol_04, V_crank_nicolson_200_30_vol_04, S_steps)
+
+    errors_explicit_200_30_vol_02[idx] = V_explicit_200_30_vol_02_interp[idx] - BS_price_02
+    errors_implicit_200_30_vol_02[idx] = V_implicit_200_30_vol_02_interp[idx] - BS_price_02
+    errors_crank_nicolson_200_30_vol_02[idx] = V_crank_nicolson_200_30_vol_02_interp[idx] - BS_price_02
     
-    errors_explicit_200_30_vol_02[idx] = np.abs(black_scholes_put(S, E, T, r, volatility_02) - V_explicit_200_30_vol_02_interp[idx])
-    errors_implicit_200_30_vol_02[idx] = np.abs(black_scholes_put(S, E, T, r, volatility_02) - V_implicit_200_30_vol_02_interp[idx])
-    errors_crank_nicolson_200_30_vol_02[idx] = np.abs(black_scholes_put(S, E, T, r, volatility_02) - V_crank_nicolson_200_30_vol_02_interp[idx])
-    
-    errors_explicit_200_30_vol_04[idx] = np.abs(black_scholes_put(S, E, T, r, volatility_04) - V_explicit_200_30_vol_04_interp[idx])
-    errors_implicit_200_30_vol_04[idx] = np.abs(black_scholes_put(S, E, T, r, volatility_04) - V_implicit_200_30_vol_04_interp[idx])
-    errors_crank_nicolson_200_30_vol_04[idx] = np.abs(black_scholes_put(S, E, T, r, volatility_04) - V_crank_nicolson_200_30_vol_04_interp[idx])
+    errors_explicit_200_30_vol_04[idx] = V_explicit_200_30_vol_04_interp[idx] - BS_price_04
+    errors_implicit_200_30_vol_04[idx] = V_implicit_200_30_vol_04_interp[idx] - BS_price_04
+    errors_crank_nicolson_200_30_vol_04[idx] = V_crank_nicolson_200_30_vol_04_interp[idx] - BS_price_04
 
 # Plot errors
 plt.figure(figsize=(14, 10))
@@ -133,10 +134,22 @@ plt.plot(S_steps, errors_crank_nicolson_200_30_vol_02, label='Crank-Nicolson Met
 plt.plot(S_steps, errors_explicit_200_30_vol_04, label='Explicit Method, σ=0.4', color='blue', linestyle='--')
 plt.plot(S_steps, errors_implicit_200_30_vol_04, label='Implicit Method, σ=0.4', color='orange', linestyle='--')
 plt.plot(S_steps, errors_crank_nicolson_200_30_vol_04, label='Crank-Nicolson Method, σ=0.4', color='green', linestyle='--')
+
+# Add strike price line
+plt.axvline(x=float(E), color='red', linestyle='-.', label='Strike Price (E=10)', linewidth=1.5)
+
+# Set y-axis limits to make curves stand out
+plt.ylim(-0.5, 0.5)
+
+# Add labels, title, and legend
 plt.xlabel('Stock Price (S)')
-plt.ylabel('Absolute Error')
+plt.ylabel('Error')
 plt.title('Errors in Option Pricing for Different Volatilities and Methods')
 plt.legend()
+
+# Set grid and show the plot
 plt.grid(True)
-plt.savefig('finite_difference_errors_2.pdf')
+
+# Save and display
+plt.savefig('finite_difference_errors_with_strike_line.pdf')
 plt.show()
